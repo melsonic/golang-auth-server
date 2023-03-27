@@ -208,27 +208,61 @@ A more opinionated project template with sample/reusable configs, scripts and co
 
 
 
-#### Notes for self
-Sure, you can modify the command in step 3 to include the make run command as well. Here are the updated steps:
-
-Install "entr" by running the following command:
-
+# Setup Instructions
+---
+### Setting up `.env` file
+---
+First of all create a .env file at `root` of your project and inside `/test` folder
+The format of the .env file is :
 ```
-sudo apt-get install entr
-```
-
-Create a file named .entr in your project's root directory with the following content:
-```
-*.go | Makefile
-```
-
-Start "entr" by running the following command in your project's root directory:
-```
-find . -name '*.go' -or -name 'Makefile' | entr -cr sh -c 'make build && make run'
+PORT=<your_port>
+DB_USERNAME=<mysql_username>
+DB_PASSWORD=<mysql_password>
+DB_DBNAME=<mysql_db_name>
+JWT_SIGNATURE=<jwt_sign>
 ```
 
-This command tells "entr" to run the make build command followed by the make run command whenever a .go file or the Makefile changes.
+---
+### Setting up the database
+---
+- first of all log into your mysql server
+- create a database and pass the name to `<mysql_db_name>` in `.env` file & after running the server it will automatically create all the tables using `gorm`
 
-"entr" will start monitoring your project directory for file changes. When a change is detected, it will run the make build command to rebuild your project, and then the make run command to start your application.
+---
+### Setting up the server
+---
+- Go to the root of your project
+- run `make build` to compile your project, it will create a `main` file
+- run `make run` to run that file (N.B: mysql should be in the running state while running this command)
+- The server should be running at `localhost:<your_port>`
 
-That's it! Now, whenever you make changes to your project's source code or Makefile, "entr" will automatically run the make build command to rebuild your project, and then the make run command to start your application.# golang-auth-server
+---
+### Running unit tests
+---
+- first make sure to put a valid access token in the `./test/dataset/data.go` (you can get one by making a login request to the `/login` route, it will response with a valid access token)
+- run the command `go test`
+---
+### Routes
+---
+**The server has five routes as follows**
+```
+/login
+/authorize/viewusers
+/authorize/logout
+/authorize/checkadmin/adduser
+/authorize/checkadmin/deleteuser
+```
+
+- the sub path `/authorize` uses a middleware that deals with the authorization of the user using jwt-tokens
+- the sub path `/checkadmin` uses another middleware function to check if admin user is making those requests, since adding and deleting users requires administrative privilege
+
+---
+### Testing the API with Insomnia
+---
+
+**I have used Insimnia for api testing. Below are the instructions on how to test each API endpoint
+1. `/login` route : It requires a json object with `username` and `password` field. If the handler resolved successsfully it should provide an `access token` and the `refresh token` will be stored into the database.
+2. `/authorize/logout` route : In this route no input is required in json format. But an `access token` is needed to be sent in the Authorization Header for the server to identify the user.
+3. `/authorize/viewusers` : No input json object required. But an `access token` is needed to be sent in the Authorization Header for the server to identify the user. It will list all the users in their organization.
+4. `/authorize/checkadmin/adduser` : It requires a json object with `username` and `password` field. It will add a new user in their organization.
+5. `authorize/checkadmin/deleteuser` : It requires a json object with `username` as input. It will delete the user from the database, it it belongs to their organization.

@@ -33,15 +33,3 @@ func Register(c *gin.Context) {
 	database.Db.Create(&user)
 
 }
-
-func RegisterOrganization(c *gin.Context) {
-	var org models.Org
-	binderr := c.Bind(&org)
-
-	if binderr != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-		return
-	}
-
-	database.Db.Create(&org)
-}

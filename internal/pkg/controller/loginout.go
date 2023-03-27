@@ -4,20 +4,25 @@ import (
 	"errors"
 	"example/auth/internal/pkg/authorize"
 	"example/auth/internal/pkg/models"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"example/auth/internal/pkg/database"
 	"example/auth/internal/pkg/hashing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
-// function to handle home route
-func Home(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "hi mom : )",
-	})
+func init() {
+	loaderr := godotenv.Load()
+
+	if loaderr != nil {
+		log.Fatal("Error loading .env file")
+	}
 }
 
 // function to handle login route
@@ -46,6 +51,9 @@ func Login(c *gin.Context) {
 	// else user exist
 	ispwMatched := hashing.ComparePassword(password, user.Password)
 
+	fmt.Println("password ", password)
+	fmt.Println("user.Password ", user.Password)
+
 	if !ispwMatched {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": "password didn't match",
@@ -53,7 +61,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	SignedAccessToken, saerr := authorize.GenerateAccessToken(models.User(user))
+	SignedAccessToken, expireAccess, saerr := authorize.GenerateAccessToken(models.User(user))
 
 	if saerr != nil {
 		c.AbortWithStatusJSON(498, gin.H{
@@ -81,10 +89,15 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	domainName := fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
+
+	// set cookie for access and refresh token
+	c.SetCookie("access token", SignedAccessToken, int(expireAccess), "/login", domainName, false, true)
+	c.SetCookie("refresh token", SignedRefreshToken, int(expireRefresh), "/login", domainName, false, true)
+
 	c.JSON(http.StatusAccepted, gin.H{
-		"message":       "user logged in succesfully",
-		"access token":  SignedAccessToken,
-		"refresh token": SignedRefreshToken,
+		"access_token": SignedAccessToken,
+		"message":      "user logged in succesfully",
 	})
 
 }
@@ -131,6 +144,6 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{"message": "user logged out succesfully", "access token": jwtAccessToken})
+	c.JSON(http.StatusAccepted, gin.H{"access_token": jwtAccessToken, "message": "user logged out succesfully"})
 
 }

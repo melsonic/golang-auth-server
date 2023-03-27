@@ -105,7 +105,7 @@ func GenerateAccessFromRefresh(username string) string {
 		return ""
 	}
 
-	access_token, _ := GenerateAccessToken(user)
+	access_token, _, _ := GenerateAccessToken(user)
 
 	return access_token
 }

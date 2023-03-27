@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"example/auth/internal/pkg/database"
@@ -45,6 +46,7 @@ func AddUser(c *gin.Context) {
 	orgId, ok := c.Get("orgid")
 
 	if !ok {
+		fmt.Println("orgId : ", orgId)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "error extracting orgid"})
 		return
 	}
@@ -78,7 +80,7 @@ func AddUser(c *gin.Context) {
 	newUser := models.User{
 		Username: loginUser.Username,
 		Password: hpassword,
-		Isadmin:  false,
+		Admin:    false,
 		OrgId:    orgid,
 	}
 
@@ -92,8 +94,8 @@ func AddUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{
+		"access_token": jwtAccessToken,
 		"message":      "new user succesfully added",
-		"access token": jwtAccessToken,
 	})
 
 }
@@ -151,8 +153,8 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{
+		"access_token": jwtAccessToken,
 		"message":      "requested user successfully deleted",
-		"access token": jwtAccessToken,
 	})
 
 }

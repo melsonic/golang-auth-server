@@ -4,14 +4,13 @@ import (
 	handleRoute "example/auth/internal/pkg/controller"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	authorize "example/auth/internal/pkg/authorize"
 )
-
-var PORT int = 3000
 
 func main() {
 
@@ -22,6 +21,8 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	router.POST("/register", handleRoute.Register)
 
 	// [x] LOGIN ROUTE
 	router.POST("/login", handleRoute.Login)
@@ -34,7 +35,7 @@ func main() {
 	authorizeRoute.POST("/logout", handleRoute.Logout)
 
 	// [x] VIEW ALL USERS IN THE USER ORGANIZATION
-	authorizeRoute.POST("/viewusers", handleRoute.ViewUsers)
+	authorizeRoute.GET("/viewusers", handleRoute.ViewUsers)
 
 	// README MAKE /checkadmin ROUTE TO CHECK IS USER IS ADMIN USER BEFORE MAKING REQUEST
 	adminRoute := authorizeRoute.Group("/checkadmin")
@@ -47,5 +48,5 @@ func main() {
 	adminRoute.POST("/deleteuser", handleRoute.DeleteUser)
 
 	// app listening at port : 3000
-	router.Run(fmt.Sprintf(":%d", PORT))
+	router.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))
 }

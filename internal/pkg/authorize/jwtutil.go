@@ -23,7 +23,7 @@ func init() {
 type MyClaims struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	IsAdmin  bool   `json:"admin"`
+	Admin    bool   `json:"admin"`
 	OrgId    uint   `json:"orgid"`
 	jwt.StandardClaims
 }
@@ -32,7 +32,7 @@ func GetAccessTokenClaims(user models.User, expire int64) MyClaims {
 	var accessTokenClaims = MyClaims{
 		Username: user.Username,
 		Password: user.Password,
-		IsAdmin:  user.Isadmin,
+		Admin:    user.Admin,
 		OrgId:    user.OrgId,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expire,
@@ -49,7 +49,7 @@ func GetRefreshTokenClaims(user models.User, expire int64) MyClaims {
 	var refreshTokenClaims = MyClaims{
 		Username: user.Username,
 		Password: user.Password,
-		IsAdmin:  user.Isadmin,
+		Admin:    user.Admin,
 		OrgId:    user.OrgId,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expire,
@@ -81,7 +81,7 @@ func ExtractJwtClaims(jwtToken string) (map[string]interface{}, bool) {
 /* load the signature from .env file */
 var mySignature = []byte(os.Getenv("JWT_SIGNATURE"))
 
-func GenerateAccessToken(user models.User) (string, error) {
+func GenerateAccessToken(user models.User) (string, int64, error) {
 	var expire int64 = time.Now().Add(time.Hour).Unix()
 	accessTokenClaims := GetAccessTokenClaims(user, expire)
 	// create new JWT Token object with custom claims
@@ -89,7 +89,7 @@ func GenerateAccessToken(user models.User) (string, error) {
 	// sign the token using a secret key
 	SignedAccessToken, saerr := accessToken.SignedString(mySignature)
 
-	return SignedAccessToken, saerr
+	return SignedAccessToken, expire, saerr
 }
 
 /* function to generate refresh token */

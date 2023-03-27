@@ -7,17 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type Org struct {
-	Id   uint `gorm:"primaryKey;column:id"`
-	Name string
-}
-
 type User struct {
 	Username string `gorm:"primaryKey"`
 	Password string `gorm:"not null"`
-	Isadmin  bool   `gorm:"not null; column:admin"`
+	Admin    bool   `gorm:"not null; column:admin"`
 	OrgId    uint   `gorm:"column:orgid"`
-	Org      Org    `gorm:"foreignKey:OrgId"`
 }
 
 type JwtRefreshToken struct {
@@ -40,8 +34,11 @@ func (at *JwtBlackListedToken) AfterCreate(db *gorm.DB) (err error) {
 }
 
 func init() {
-	// create database table for org and user and refreshToken
-	database.Db.AutoMigrate(&Org{})
+	// Drop table if exist i.e Delete JwtBlackListedToken on server restart
+	// database.Db.Migrator().DropTable(&JwtRefreshToken{})
+	database.Db.Migrator().DropTable(&JwtBlackListedToken{})
+
+	// create database table
 	database.Db.AutoMigrate(&User{})
 	database.Db.AutoMigrate(&JwtRefreshToken{})
 	database.Db.AutoMigrate(&JwtBlackListedToken{})
